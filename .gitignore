@@ -1,1 +1,17 @@
+# Secrets & environment files (never commit!)
+.streamlit/secrets.toml
 .env
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Runtime FAISS index cache
+data/*/
+!data/.gitkeep
+
+# OS files
+.DS_Store

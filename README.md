@@ -53,6 +53,9 @@ youtube-rag-chatbot/
 ├── requirements.txt        # Python dependencies
 ├── .env.example            # Environment variable template
 ├── README.md               # Documentation & setup guide
+├── .gitignore              # Keeps secrets and cached indexes out of git
+├── .streamlit/
+│   └── secrets.toml.example # Streamlit Secrets template
 ├── modules/
 │   ├── __init__.py
 │   ├── utils.py            # URL validation, metadata lookup, timestamps, highlighting
@@ -83,21 +86,30 @@ cd youtube-rag-chatbot
 pip install -r requirements.txt
 ```
 
-### 3. Configure your Groq API Key
+### 3. Configure your Groq API Key with Streamlit Secrets
 
-Create a `.env` file from `.env.example`:
+#### Local Development
+Create `.streamlit/secrets.toml` from the example template:
 
 ```bash
-cp .env.example .env
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 ```
 
-Edit `.env` and set your Groq API key (from [Groq Console](https://console.groq.com/keys)):
+Edit `.streamlit/secrets.toml` and set your Groq API key (from [Groq Console](https://console.groq.com/keys)):
 
-```env
-GROQ_API_KEY=gsk_your_actual_groq_api_key
+```toml
+GROQ_API_KEY = "gsk_your_actual_groq_api_key"
 ```
 
-> **Security Note:** `.env` is read server-side by `python-dotenv` and is never displayed or exposed in the Streamlit frontend.
+#### Hosting on Streamlit Community Cloud
+1. Push your repository to GitHub (`.gitignore` automatically excludes `.streamlit/secrets.toml` and `.env`).
+2. Deploy `app.py` on [share.streamlit.io](https://share.streamlit.io).
+3. In **App Settings → Secrets**, paste:
+   ```toml
+   GROQ_API_KEY = "gsk_your_actual_groq_api_key"
+   ```
+
+> **Security Note:** Secrets are read server-side via `st.secrets` (with optional environment fallback) and are never displayed or exposed in the Streamlit frontend.
 
 ---
 

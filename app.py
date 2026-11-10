@@ -103,8 +103,9 @@ def _render_sidebar() -> dict:
 
         # Secure API key status check (never displays or leaks the key itself)
         if config.is_groq_configured():
+            secret_source = html.escape(config.get_secret_source())
             st.markdown(
-                '<span class="status-badge badge-ready">● Groq API Ready (.env)</span>',
+                f'<span class="status-badge badge-ready">● Groq API Ready ({secret_source})</span>',
                 unsafe_allow_html=True,
             )
         else:
@@ -113,17 +114,18 @@ def _render_sidebar() -> dict:
                 unsafe_allow_html=True,
             )
             st.caption(
-                "Add `GROQ_API_KEY` to a `.env` file in the project root (see `.env.example`) "
-                "and restart or re-submit your question."
+                "Add `GROQ_API_KEY` to **Streamlit Secrets** (`.streamlit/secrets.toml` locally "
+                "or **App Settings → Secrets** on Streamlit Cloud)."
             )
 
         st.divider()
 
         st.markdown("#### 🤖 Groq LLM Settings")
         groq_models = fetch_available_groq_models()
+        preferred_groq_model = config.get_groq_model()
         default_model_idx = (
-            groq_models.index(config.DEFAULT_GROQ_MODEL)
-            if config.DEFAULT_GROQ_MODEL in groq_models
+            groq_models.index(preferred_groq_model)
+            if preferred_groq_model in groq_models
             else 0
         )
         groq_model = st.selectbox(
@@ -142,9 +144,10 @@ def _render_sidebar() -> dict:
         )
 
         st.markdown("#### 🧬 Embeddings & Chunking")
+        preferred_emb_model = config.get_embedding_model()
         default_emb_idx = (
-            config.AVAILABLE_EMBEDDING_MODELS.index(config.DEFAULT_EMBEDDING_MODEL)
-            if config.DEFAULT_EMBEDDING_MODEL in config.AVAILABLE_EMBEDDING_MODELS
+            config.AVAILABLE_EMBEDDING_MODELS.index(preferred_emb_model)
+            if preferred_emb_model in config.AVAILABLE_EMBEDDING_MODELS
             else 0
         )
         embedding_model = st.selectbox(
@@ -300,7 +303,10 @@ def _process_video_pipeline(
                 embedding_model=embedding_model,
             )
             new_store.add_chunks(chunks, embeddings)
-            new_store.save(config.DATA_DIR)
+            try:
+                new_store.save(config.DATA_DIR)
+            except OSError:
+                pass
 
             # Persist new pipeline state & reset session chat for new video
             st.session_state.video_metadata = metadata

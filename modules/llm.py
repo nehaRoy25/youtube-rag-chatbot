@@ -1,12 +1,10 @@
 """Groq LLM client for strictly grounded YouTube video question answering."""
 
 from dataclasses import dataclass
-import os
 import re
 import time
 from typing import Optional
 
-from dotenv import load_dotenv
 from groq import (
     APIConnectionError,
     APIStatusError,
@@ -70,13 +68,12 @@ class LLMResponse:
 
 
 def _resolve_api_key() -> str:
-    """Resolve Groq API key securely from environment / .env without ever exposing it."""
-    load_dotenv(dotenv_path=config.BASE_DIR / ".env", override=False)
-    key = os.getenv("GROQ_API_KEY", "").strip()
+    """Resolve Groq API key securely from Streamlit Secrets or environment."""
+    key = config.get_groq_api_key()
     if not key or key == "your_groq_api_key_here":
         raise LLMError(
-            "Groq API key is not configured. Please add GROQ_API_KEY to your .env file "
-            "and restart or retry."
+            "Groq API key is not configured. Add GROQ_API_KEY to Streamlit Secrets "
+            "(.streamlit/secrets.toml locally or App Settings -> Secrets on Streamlit Cloud)."
         )
     return key
 
@@ -221,7 +218,7 @@ class GroqAnswerGenerator:
                 ) from exc
         except AuthenticationError as exc:
             raise LLMError(
-                "Groq authentication failed. Please verify GROQ_API_KEY in your .env file."
+                "Groq authentication failed. Please verify GROQ_API_KEY in your Streamlit Secrets."
             ) from exc
         except RateLimitError as exc:
             raise LLMError(
